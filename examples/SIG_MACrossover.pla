@@ -1,5 +1,5 @@
 { ============================================
-  Strategy: Moving Average Crossover
+  Signal: Moving Average Crossover
   Description: Classic dual MA crossover system
   ============================================ }
 

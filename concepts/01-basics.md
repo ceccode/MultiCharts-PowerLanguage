@@ -2,7 +2,7 @@
 
 ## Overview
 
-PowerLanguage is MultiCharts' programming language for creating indicators, strategies, and functions. It's compatible with TradeStation's EasyLanguage.
+PowerLanguage is MultiCharts' programming language for creating indicators, signals, and functions.
 
 ## Study Types
 
@@ -19,12 +19,12 @@ SMA = Average(Close, Length);
 Plot1(SMA, "SMA");
 ```
 
-### 2. Signals (Strategies)
+### 2. Signals
 
 Automated trading logic with entry/exit rules.
 
 ```powerlanguage
-// Simple Crossover Strategy
+// Simple Crossover Signal
 Inputs: FastLength(9), SlowLength(21);
 Variables: FastMA(0), SlowMA(0);
 

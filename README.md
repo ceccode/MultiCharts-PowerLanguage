@@ -1,15 +1,14 @@
 # MultiCharts PowerLanguage Reference
 
-A collection of PowerLanguage functions, indicators, strategies, and concepts for MultiCharts.
+A collection of PowerLanguage functions, indicators, signals, and concepts for MultiCharts.
 
 ## 📁 Repository Structure
 
-```
+```bash
 ├── concepts/           # Core PowerLanguage concepts and syntax
 ├── indicators/         # Technical indicators
-├── strategies/         # Trading strategies
+├── signals/            # Trading signals (automated trading logic)
 ├── functions/          # Reusable functions
-├── signals/            # Entry/exit signals
 ├── studies/            # Analysis studies
 ├── templates/          # Code templates and boilerplates
 └── examples/           # Working examples and tutorials
@@ -27,7 +26,7 @@ A collection of PowerLanguage functions, indicators, strategies, and concepts fo
 ### Study Types
 
 - **Indicators** - Visual analysis tools plotted on charts
-- **Signals/Strategies** - Automated trading logic with entry/exit rules
+- **Signals** - Automated trading logic with entry/exit rules
 - **Functions** - Reusable code blocks
 
 ### Data Types
@@ -51,9 +50,8 @@ A collection of PowerLanguage functions, indicators, strategies, and concepts fo
 ## 📝 File Naming Convention
 
 - Indicators: `IND_IndicatorName.pla`
-- Strategies: `STR_StrategyName.pla`
-- Functions: `FN_FunctionName.pla`
 - Signals: `SIG_SignalName.pla`
+- Functions: `FN_FunctionName.pla`
 
 ## 🚀 Getting Started
 
