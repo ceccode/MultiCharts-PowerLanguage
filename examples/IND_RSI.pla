@@ -1,0 +1,31 @@
+{ ============================================
+  Indicator: RSI with Overbought/Oversold
+  Description: RSI with colored zones
+  ============================================ }
+
+Inputs:
+    Length(14),
+    OverBought(70),
+    OverSold(30);
+
+Variables:
+    RSIValue(0);
+
+RSIValue = RSI(Close, Length);
+
+Plot1(RSIValue, "RSI");
+Plot2(OverBought, "OB");
+Plot3(OverSold, "OS");
+Plot4(50, "Mid");
+
+// Color RSI based on zone
+If RSIValue >= OverBought then
+    SetPlotColor(1, Red)
+else if RSIValue <= OverSold then
+    SetPlotColor(1, Green)
+else
+    SetPlotColor(1, Yellow);
+
+SetPlotColor(2, Red);
+SetPlotColor(3, Green);
+SetPlotColor(4, DarkGray);

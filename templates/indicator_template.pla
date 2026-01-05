@@ -1,0 +1,47 @@
+{ ============================================
+  Indicator: [INDICATOR NAME]
+  Description: [Brief description]
+  Author: [Your name]
+  Date: [Creation date]
+  Version: 1.0
+  ============================================ }
+
+// ============================================
+// INPUTS
+// ============================================
+Inputs:
+    Length(14),
+    ShowPlot(true);
+
+// ============================================
+// VARIABLES
+// ============================================
+Variables:
+    Value1(0),
+    Value2(0);
+
+// ============================================
+// CALCULATIONS
+// ============================================
+
+// Add your indicator logic here
+Value1 = Average(Close, Length);
+
+// ============================================
+// PLOTTING
+// ============================================
+If ShowPlot then begin
+    Plot1(Value1, "Main");
+    
+    // Conditional coloring
+    If Value1 > Value1[1] then
+        SetPlotColor(1, Green)
+    else
+        SetPlotColor(1, Red);
+end;
+
+// ============================================
+// ALERTS (Optional)
+// ============================================
+// If [condition] then
+//     Alert("Alert message");

@@ -1,0 +1,24 @@
+{ ============================================
+  Indicator: Simple Moving Average
+  Description: Plots SMA with trend coloring
+  ============================================ }
+
+Inputs:
+    Length(20),
+    ColorByTrend(true);
+
+Variables:
+    SMA(0);
+
+SMA = Average(Close, Length);
+
+Plot1(SMA, "SMA");
+
+If ColorByTrend then begin
+    If SMA > SMA[1] then
+        SetPlotColor(1, Green)
+    else if SMA < SMA[1] then
+        SetPlotColor(1, Red)
+    else
+        SetPlotColor(1, Yellow);
+end;

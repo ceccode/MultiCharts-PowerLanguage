@@ -1,0 +1,29 @@
+{ ============================================
+  Indicator: Bollinger Bands
+  Description: Classic Bollinger Bands with 
+               middle band and upper/lower bands
+  ============================================ }
+
+Inputs:
+    Length(20),
+    NumDevs(2.0);
+
+Variables:
+    MidBand(0),
+    UpperBand(0),
+    LowerBand(0),
+    StdDevValue(0);
+
+MidBand = Average(Close, Length);
+StdDevValue = StdDev(Close, Length);
+
+UpperBand = MidBand + (NumDevs * StdDevValue);
+LowerBand = MidBand - (NumDevs * StdDevValue);
+
+Plot1(UpperBand, "Upper");
+Plot2(MidBand, "Middle");
+Plot3(LowerBand, "Lower");
+
+SetPlotColor(1, Cyan);
+SetPlotColor(2, Yellow);
+SetPlotColor(3, Cyan);

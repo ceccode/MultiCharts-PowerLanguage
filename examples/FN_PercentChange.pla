@@ -1,0 +1,20 @@
+{ ============================================
+  Function: PercentChange
+  Description: Calculate percent change between 
+               two values
+  Returns: Numeric
+  ============================================ }
+
+Inputs:
+    CurrentValue(NumericSimple),
+    PreviousValue(NumericSimple);
+
+Variables:
+    Result(0);
+
+If PreviousValue <> 0 then
+    Result = ((CurrentValue - PreviousValue) / AbsValue(PreviousValue)) * 100
+else
+    Result = 0;
+
+FN_PercentChange = Result;

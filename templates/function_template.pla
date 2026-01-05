@@ -1,0 +1,37 @@
+{ ============================================
+  Function: [FUNCTION NAME]
+  Description: [Brief description]
+  Returns: [Return type - Numeric/TrueFalse/String]
+  Author: [Your name]
+  Date: [Creation date]
+  Version: 1.0
+  ============================================ }
+
+// ============================================
+// INPUTS
+// ============================================
+Inputs:
+    Price(NumericSeries),
+    Length(NumericSimple);
+
+// ============================================
+// VARIABLES
+// ============================================
+Variables:
+    Result(0),
+    i(0);
+
+// ============================================
+// FUNCTION LOGIC
+// ============================================
+
+// Example: Calculate sum of prices over length
+Result = 0;
+For i = 0 to Length - 1 begin
+    Result = Result + Price[i];
+end;
+
+// ============================================
+// RETURN VALUE
+// ============================================
+[FunctionName] = Result;

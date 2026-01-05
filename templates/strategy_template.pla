@@ -1,0 +1,71 @@
+{ ============================================
+  Strategy: [STRATEGY NAME]
+  Description: [Brief description]
+  Author: [Your name]
+  Date: [Creation date]
+  Version: 1.0
+  ============================================ }
+
+// ============================================
+// INPUTS
+// ============================================
+Inputs:
+    // Entry parameters
+    FastLength(9),
+    SlowLength(21),
+    
+    // Risk management
+    StopLossPoints(100),
+    ProfitTargetPoints(200),
+    
+    // Position sizing
+    Contracts(1);
+
+// ============================================
+// VARIABLES
+// ============================================
+Variables:
+    FastMA(0),
+    SlowMA(0),
+    LongCondition(false),
+    ShortCondition(false);
+
+// ============================================
+// CALCULATIONS
+// ============================================
+FastMA = Average(Close, FastLength);
+SlowMA = Average(Close, SlowLength);
+
+// ============================================
+// ENTRY CONDITIONS
+// ============================================
+LongCondition = FastMA crosses above SlowMA;
+ShortCondition = FastMA crosses below SlowMA;
+
+// ============================================
+// ENTRY LOGIC
+// ============================================
+If MarketPosition = 0 then begin
+    If LongCondition then
+        Buy ("Long Entry") Contracts contracts next bar at market;
+    
+    If ShortCondition then
+        SellShort ("Short Entry") Contracts contracts next bar at market;
+end;
+
+// ============================================
+// EXIT LOGIC
+// ============================================
+
+// Exit on opposite signal
+If MarketPosition = 1 and ShortCondition then
+    Sell ("Long Exit Signal") next bar at market;
+
+If MarketPosition = -1 and LongCondition then
+    BuyToCover ("Short Exit Signal") next bar at market;
+
+// ============================================
+// RISK MANAGEMENT
+// ============================================
+SetStopLoss(StopLossPoints);
+SetProfitTarget(ProfitTargetPoints);

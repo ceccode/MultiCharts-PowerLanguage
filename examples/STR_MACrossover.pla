@@ -1,0 +1,50 @@
+{ ============================================
+  Strategy: Moving Average Crossover
+  Description: Classic dual MA crossover system
+  ============================================ }
+
+Inputs:
+    FastLength(9),
+    SlowLength(21),
+    StopLossPct(2.0),
+    TakeProfitPct(4.0);
+
+Variables:
+    FastMA(0),
+    SlowMA(0),
+    StopPrice(0),
+    TargetPrice(0);
+
+FastMA = Average(Close, FastLength);
+SlowMA = Average(Close, SlowLength);
+
+// Entry Logic
+If MarketPosition = 0 then begin
+    If FastMA crosses above SlowMA then
+        Buy ("MA Cross Long") next bar at market;
+    
+    If FastMA crosses below SlowMA then
+        SellShort ("MA Cross Short") next bar at market;
+end;
+
+// Exit on opposite signal
+If MarketPosition = 1 and FastMA crosses below SlowMA then
+    Sell ("Long Exit") next bar at market;
+
+If MarketPosition = -1 and FastMA crosses above SlowMA then
+    BuyToCover ("Short Exit") next bar at market;
+
+// Risk Management
+If MarketPosition = 1 then begin
+    StopPrice = EntryPrice * (1 - StopLossPct / 100);
+    TargetPrice = EntryPrice * (1 + TakeProfitPct / 100);
+    Sell ("Long SL") next bar at StopPrice stop;
+    Sell ("Long TP") next bar at TargetPrice limit;
+end;
+
+If MarketPosition = -1 then begin
+    StopPrice = EntryPrice * (1 + StopLossPct / 100);
+    TargetPrice = EntryPrice * (1 - TakeProfitPct / 100);
+    BuyToCover ("Short SL") next bar at StopPrice stop;
+    BuyToCover ("Short TP") next bar at TargetPrice limit;
+end;
