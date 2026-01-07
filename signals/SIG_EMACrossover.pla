@@ -1,0 +1,59 @@
+{ ============================================
+  Strategy: EMA Crossover with Trend & Volatility Filter
+  Description:
+  Trend-following strategy based on a fast/slow EMA crossover.
+  Entries are allowed only when market strength is confirmed
+  by ADX, reducing trades during sideways conditions.
+  Risk management uses ATR-based stop loss and profit target
+  to adapt position sizing to market volatility.
+  ============================================ }
+
+Inputs:
+    FastLength(9),
+    SlowLength(21),
+    ADXLen(14),
+    MinADX(20),
+    ATRLen(14),
+    StopATR(2.0),
+    TargetATR(3.0);
+
+Vars:
+    FastMA(0),
+    SlowMA(0),
+    adxVal(0),
+    atrVal(0);
+
+// MAs (EMA)
+FastMA = XAverage(Close, FastLength);
+SlowMA = XAverage(Close, SlowLength);
+
+// Filters
+adxVal = ADX(ADXLen);
+atrVal = AvgTrueRange(ATRLen);
+
+// --- Entry (only in trend) ---
+If MarketPosition = 0 and adxVal >= MinADX then begin
+    If FastMA crosses over SlowMA then
+        Buy ("EMA Cross L") next bar at market;
+
+    If FastMA crosses under SlowMA then
+        SellShort ("EMA Cross S") next bar at market;
+end;
+
+// --- Exit on opposite signal (optional; keep it for now) ---
+If MarketPosition = 1 and FastMA crosses under SlowMA then
+    Sell ("Exit L") next bar at market;
+
+If MarketPosition = -1 and FastMA crosses over SlowMA then
+    BuyToCover ("Exit S") next bar at market;
+
+// --- ATR-based SL/TP ---
+If MarketPosition = 1 then begin
+    Sell ("L-SL") next bar at (EntryPrice - StopATR * atrVal) stop;
+    Sell ("L-TP") next bar at (EntryPrice + TargetATR * atrVal) limit;
+end;
+
+If MarketPosition = -1 then begin
+    BuyToCover ("S-SL") next bar at (EntryPrice + StopATR * atrVal) stop;
+    BuyToCover ("S-TP") next bar at (EntryPrice - TargetATR * atrVal) limit;
+end;
