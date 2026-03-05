@@ -1,0 +1,29 @@
+Inputs:
+    DataFeed_Timeout(30),
+    Time_Between_Alerts(30);
+
+Variables:
+    secondsSinceUpdate(0),
+    secondsSinceAlert(0),
+    IntrabarPersist timeLastAlert(0);
+
+
+// Controlla il tempo dall'ultimo aggiornamento dati
+if (GetAppInfo(aiCalcReason) = CalcReason_Timer) and 
+    (GetAppInfo(aiRealTimeCalc) = 1) then begin
+
+    secondsSinceUpdate = (ComputerDateTime - Q_Time_DT) * 86400;
+    secondsSinceAlert = (ComputerDateTime - timeLastAlert) / ELTimeToDateTime_s(1);
+
+    Plot1("Feed inattivo: " + NumToStr(secondsSinceUpdate, 0) + " sec");
+
+    // Se il feed non aggiorna da troppo tempo, genera un alert
+    if (secondsSinceUpdate > DataFeed_Timeout) and 
+        (secondsSinceAlert > Time_Between_Alerts) then begin
+        
+        Alert("Il feed non si aggiorna da " + NumToStr(secondsSinceUpdate, 0) + " secondi.");
+        timeLastAlert = ComputerDateTime;
+    end;
+end;
+
+RecalcLastBarAfter(1);

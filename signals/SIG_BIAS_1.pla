@@ -1,0 +1,5 @@
+if MarketPosition = 0 and Time >= 1600 and Time[1] < 1600 then
+    buy next bar at market;
+
+if MarketPosition = 1 and Time >= 0400 and Time[1] < 0400 then
+    sell next bar at market;
