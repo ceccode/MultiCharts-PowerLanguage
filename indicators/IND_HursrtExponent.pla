@@ -1,0 +1,95 @@
+{ ============================================
+  Indicator: Hurst Exponent (R/S Analysis)
+  Description: Measures if price movement is trending, 
+               mean-reverting, or random using Rescaled 
+               Range (R/S) analysis.
+  
+  What is the Hurst Exponent?
+  A statistical measure that classifies price behavior:
+  
+    H > 0.5  = TRENDING (persistent)
+               Price tends to continue in the same direction.
+               Higher = stronger trend.
+               Good for: trend-following strategies.
+    
+    H = 0.5  = RANDOM WALK
+               Price moves are independent, no memory.
+               Like flipping a coin.
+               The gray reference line shows this level.
+    
+    H < 0.5  = MEAN-REVERTING (anti-persistent)
+               Price tends to reverse direction.
+               Lower = stronger mean reversion.
+               Good for: mean-reversion strategies.
+  
+  How to use:
+  - If H > 0.5 → use trend strategies (MA crossovers, breakouts)
+  - If H < 0.5 → use mean-reversion strategies (RSI, Bollinger)
+  - If H ≈ 0.5 → market is random, be cautious
+  
+  Algorithm: Rescaled Range (R/S) method
+  1. Calculate returns (price changes)
+  2. Compute cumulative deviation from mean
+  3. Find range (max - min) of cumulative deviation
+  4. Divide by standard deviation → R/S value
+  5. H = log(R/S) / log(N)
+  ============================================ }
+
+Inputs: HurstLength(64), ShowSmooth(true), SmoothLength(10);
+
+Vars: PriceChange(0), 
+      MeanPriceChange(0), 
+      CumulativeChange(0), 
+      MinChange(999999999), 
+      MaxChange(-999999999), 
+      CounterIndex(0), 
+      DeviationSum(0), 
+      StandardDeviation(0), 
+      RescaledRange(0), 
+      HurstExponent(0);
+
+// Step 1: Calculate percentage return for current bar
+// Example: if Close=2010, Close[1]=2000 → PriceChange = 0.005 (0.5%)
+PriceChange = Close / Close[1] - 1;
+
+// Step 2: Average return over the lookback period
+MeanPriceChange = Average(PriceChange, HurstLength);
+
+// Step 3: Build cumulative deviation series
+// For each bar, subtract the mean and accumulate.
+// Track the min and max of this cumulative sum.
+// The RANGE (max - min) tells us how far price "wandered" from its mean.
+CumulativeChange = 0;
+MinChange =  9999999;
+MaxChange = -9999999;
+
+For CounterIndex = 0 to HurstLength - 1 begin
+    // Add deviation from mean to running sum
+    CumulativeChange = CumulativeChange + (PriceChange[CounterIndex] - MeanPriceChange);
+    // Track extremes of the cumulative sum
+    MinChange = MinList(MinChange, CumulativeChange);
+    MaxChange = MaxList(MaxChange, CumulativeChange);
+end;
+
+// Step 4: Calculate standard deviation of returns
+// This normalizes the range so we can compare across different volatilities
+DeviationSum = 0;
+For CounterIndex = 0 to HurstLength - 1 begin
+    DeviationSum = DeviationSum + Square(PriceChange[CounterIndex] - MeanPriceChange);
+end;
+
+StandardDeviation = SquareRoot(DeviationSum / (HurstLength - 1));
+
+// Step 5: Rescaled Range = Range / Standard Deviation
+// This is the "R/S" value — how far price wandered relative to its volatility
+RescaledRange = (MaxChange - MinChange) / StandardDeviation;
+
+// Step 6: Hurst Exponent = log(R/S) / log(N)
+// For a random walk, R/S grows as N^0.5, so H = 0.5
+// For trending markets, R/S grows faster → H > 0.5
+// For mean-reverting markets, R/S grows slower → H < 0.5
+HurstExponent = Log(RescaledRange) / Log(HurstLength);
+
+// Plot Hurst value (cyan) and the 0.5 random walk reference (gray)
+Plot1(HurstExponent, "HurstExponent", cyan);
+Plot3(0.5, "HurstExponent random", LightGray);

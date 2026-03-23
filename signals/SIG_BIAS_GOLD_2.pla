@@ -1,0 +1,40 @@
+{ ============================================
+  Signal: BIAS Gold Strategy 2
+  Description: Time-based intraday BIAS strategy for Gold.
+               Enters LONG at a specific time if RSI is below threshold,
+               exits at a fixed time. Uses stop loss for risk management.
+  
+  Logic:
+  - BUY at 14:00 if flat AND RSI(2) < 60
+  - SELL (exit) at 2:00 if long
+  - Stop loss: 2600 points
+  ============================================ }
+
+Inputs:
+    EntryTime(1400),           // Entry time (14:00)
+    ExitTime(200),             // Exit time (2:00)
+    RSIPeriod(10),              // RSI period
+    RSIThreshold(75),          // RSI must be below this to enter
+    StopLossPoints(2300);      // Stop loss in points
+
+Variables:
+    EntryCondition(false),
+    ExitCondition(false);
+
+// Entry: At EntryTime, flat position, RSI below threshold
+EntryCondition = Time = EntryTime and MarketPosition = 0 and RSI(Close, RSIPeriod) < RSIThreshold;
+
+// Exit: At ExitTime, if we have a long position
+ExitCondition = Time = ExitTime and MarketPosition >= 1;
+
+If EntryCondition then
+begin
+    Buy ("Long Entry") next bar at market;
+end;
+
+If ExitCondition then
+begin
+    Sell ("Time Exit") next bar at market;
+end;
+
+SetStopLoss(StopLossPoints);

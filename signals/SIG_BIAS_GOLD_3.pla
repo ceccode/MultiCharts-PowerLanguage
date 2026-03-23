@@ -1,0 +1,181 @@
+{ ============================================
+  Signal: BIAS Gold Strategy 3
+  Description: Enhanced version of BIAS Gold 2 with optional filters
+               and improved stop loss management.
+  
+  Base Logic (same as GOLD_2):
+  - BUY at 14:00 if flat AND RSI(2) < 60
+  - SELL (exit) at 2:00 if long
+  - Stop loss: 2600 points
+  
+  Enhancements (all off by default):
+  - Trend Filter: Only buy if Close > SMA(TrendMALength)
+  - ATR Stop: Dynamic stop = ATR * multiplier
+  - Trailing Stop: Lock profits as price moves up
+  - Breakeven Stop: Move stop to entry after X points profit
+  - Day Filter: Skip specific days of week
+  
+  Stop Loss Strategy:
+  You can combine multiple stop methods. They work together:
+  1. Fixed stop = safety net (always active)
+  2. ATR stop = adapts to volatility
+  3. Breakeven = eliminates risk after profit
+  4. Trailing = locks in profit as price moves
+  
+  Recommended testing order:
+  - Start with fixed stop only (baseline)
+  - Add breakeven → does it reduce drawdown?
+  - Add trailing → does it improve profit factor?
+  - Try ATR stop instead of fixed → more adaptive?
+  ============================================ }
+
+Inputs:
+    EntryTime(1400),           // Entry time (14:00)
+    ExitTime(200),             // Exit time (2:00)
+    RSIPeriod(2),              // RSI period
+    RSIThreshold(60),          // RSI must be below this to enter
+    StopLossPoints(2600),      // Fixed stop loss in points (0 = use ATR stop only)
+    
+    // Trend Filter
+    UseTrendFilter(false),     // Enable/disable trend filter
+    TrendMALength(50),         // MA period for trend filter
+    
+    // ATR-based Stop Loss
+    UseATRStop(false),         // Enable/disable ATR-based stop
+    ATRLength(14),             // ATR period
+    ATRMultiplier(2.0),        // Stop = ATR * this multiplier
+    
+    // Trailing Stop
+    UseTrailingStop(false),    // Enable/disable trailing stop
+    TrailingStopPoints(1500),  // Trailing distance in points
+    
+    // Breakeven Stop
+    UseBreakeven(false),       // Enable/disable breakeven stop
+    BreakevenTrigger(1000),    // Move stop to entry after this many points of profit
+    BreakevenOffset(100),      // Offset above entry to cover commissions (0 = exact entry)
+    
+    // Day of Week Filter (0=Sunday, 1=Monday, ... 5=Friday, 6=Saturday)
+    SkipDay(-1);               // Skip this day of week (-1 = disabled)
+
+Variables:
+    EntryCondition(false),
+    ExitCondition(false),
+    TrendOK(true),
+    DayOK(true),
+    ATRValue(0),
+    DynStopPrice(0),
+    CurrentProfit(0),
+    BreakevenHit(false);
+
+// ============================================
+// FILTERS
+// ============================================
+
+// Trend Filter: Only buy above MA
+If UseTrendFilter then
+    TrendOK = Close > Average(Close, TrendMALength)
+else
+    TrendOK = true;
+
+// Day Filter: Skip unwanted day
+If SkipDay >= 0 then
+    DayOK = DayOfWeek(Date) <> SkipDay
+else
+    DayOK = true;
+
+// ============================================
+// ENTRY
+// ============================================
+
+EntryCondition = Time = EntryTime 
+    and MarketPosition = 0 
+    and RSI(Close, RSIPeriod) < RSIThreshold
+    and TrendOK
+    and DayOK;
+
+If EntryCondition then
+begin
+    Buy ("Long Entry") next bar at market;
+end;
+
+// ============================================
+// EXIT
+// ============================================
+
+ExitCondition = Time = ExitTime and MarketPosition >= 1;
+
+If ExitCondition then
+begin
+    Sell ("Time Exit") next bar at market;
+end;
+
+// ============================================
+// STOP LOSS
+// ============================================
+//
+// How stop loss works in this signal:
+//
+// 1. FIXED STOP (StopLossPoints)
+//    Simplest method. A static distance from entry price.
+//    Always the same regardless of market conditions.
+//    Good as a "worst case" safety net.
+//    Optimize range: 1000-4000, step 200
+//
+// 2. ATR STOP (UseATRStop)
+//    Adapts to current volatility using Average True Range.
+//    In calm markets → tighter stop (less risk per trade)
+//    In volatile markets → wider stop (avoids noise)
+//    Formula: StopPrice = EntryPrice - (ATR * Multiplier)
+//    Optimize: ATRMultiplier 1.0-3.0, step 0.5
+//
+// 3. BREAKEVEN STOP (UseBreakeven)
+//    After price moves X points in your favor, move stop
+//    to entry price (+ small offset for commissions).
+//    Result: The trade becomes risk-free.
+//    Example: BreakevenTrigger=1000 means after +1000 points
+//    profit, stop moves to entry. You can't lose anymore.
+//    Optimize: BreakevenTrigger 500-2000, step 250
+//
+// 4. TRAILING STOP (UseTrailingStop)
+//    Follows price upward, never moves down.
+//    If price rises 3000 points then drops 1500 → exit.
+//    Locks in partial profits on winning trades.
+//    Optimize: TrailingStopPoints 800-2500, step 200
+//
+// You can COMBINE them. Recommended combos:
+//   A) Fixed + Breakeven (safe baseline)
+//   B) Fixed + Trailing (capture trends)
+//   C) ATR + Breakeven + Trailing (fully adaptive)
+// ============================================
+
+// 1. Fixed stop loss — safety net
+If StopLossPoints > 0 then
+    SetStopLoss(StopLossPoints);
+
+// 2. ATR-based dynamic stop — adapts to volatility
+If UseATRStop and MarketPosition = 1 then
+begin
+    ATRValue = AvgTrueRange(ATRLength);
+    DynStopPrice = EntryPrice - (ATRValue * ATRMultiplier);
+    Sell ("ATR Stop") next bar at DynStopPrice stop;
+end;
+
+// 3. Breakeven stop — eliminate risk after X points profit
+If UseBreakeven and MarketPosition = 1 then
+begin
+    CurrentProfit = Close - EntryPrice;
+    If CurrentProfit >= BreakevenTrigger then
+    begin
+        // Move stop to entry + offset (covers commissions)
+        Sell ("Breakeven") next bar at EntryPrice + BreakevenOffset stop;
+        BreakevenHit = true;
+    end;
+end;
+
+// Reset breakeven flag when flat
+If MarketPosition = 0 then
+    BreakevenHit = false;
+
+// 4. Trailing stop — lock in profits as price moves up
+If UseTrailingStop and TrailingStopPoints > 0 then
+    SetDollarTrailing(TrailingStopPoints);
